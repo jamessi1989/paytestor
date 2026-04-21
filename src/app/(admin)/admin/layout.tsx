@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LogoMark } from "@/components/marketing/logo";
 
 export default function AdminLayout({
   children,
@@ -11,10 +12,12 @@ export default function AdminLayout({
     <div className="flex min-h-screen flex-col bg-neutral-900 text-neutral-100">
       <header className="border-b border-neutral-800 bg-primary-700">
         <div className="container-page flex h-14 items-center justify-between">
-          <Link href="/admin" className="flex items-center gap-2">
-            <span className="flex h-7 w-7 items-center justify-center bg-highlight-400 font-display text-xs font-bold text-primary-900">
-              C
-            </span>
+          <Link
+            href="/admin"
+            className="inline-flex items-center gap-2 focus:outline-none focus:ring-4 focus:ring-focus"
+            aria-label="Crewqa admin"
+          >
+            <LogoMark variant="dark" className="h-7 w-7" />
             <span className="font-display text-sm font-bold text-white">
               Crewqa Admin
             </span>

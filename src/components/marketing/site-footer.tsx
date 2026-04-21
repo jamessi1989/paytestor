@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Logo } from "./logo";
 
 export function SiteFooter() {
   return (
@@ -6,14 +7,7 @@ export function SiteFooter() {
       <div className="container-page py-14">
         <div className="grid gap-10 md:grid-cols-4">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center bg-accent-400 font-display text-sm font-bold text-white">
-                C
-              </span>
-              <span className="font-display text-lg font-bold text-white">
-                Crewqa
-              </span>
-            </div>
+            <Logo variant="dark" />
             <p className="mt-4 text-sm leading-relaxed">
               Rigorous closed-testing for indie Android developers.
             </p>

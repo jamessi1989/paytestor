@@ -1,16 +1,16 @@
 import Link from "next/link";
+import { Logo } from "./logo";
 
 export function SiteHeader() {
   return (
     <header className="border-b border-neutral-200 bg-white">
       <div className="container-page flex h-16 items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center bg-primary-500 font-display text-sm font-bold text-white">
-            C
-          </span>
-          <span className="font-display text-lg font-bold text-neutral-900">
-            Crewqa
-          </span>
+        <Link
+          href="/"
+          className="focus:outline-none focus:ring-4 focus:ring-focus"
+          aria-label="Crewqa home"
+        >
+          <Logo variant="light" />
         </Link>
         <nav className="hidden items-center gap-8 text-sm font-medium text-neutral-700 md:flex">
           <Link href="/how-it-works" className="hover:text-primary-500">
