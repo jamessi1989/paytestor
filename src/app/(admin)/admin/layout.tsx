@@ -1,18 +1,23 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  createSupabaseServerClient,
+  isSupabaseConfigured,
+} from "@/lib/supabase/server";
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login?redirect=/admin");
-  // Role enforcement happens in each server action; keep layout thin.
+  if (isSupabaseConfigured()) {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) redirect("/login?redirect=/admin");
+    // Role enforcement happens in each server action; keep layout thin.
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-neutral-900 text-neutral-100">

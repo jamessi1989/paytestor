@@ -1,17 +1,24 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  createSupabaseServerClient,
+  isSupabaseConfigured,
+} from "@/lib/supabase/server";
 
 export default async function DevLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login?redirect=/app");
+  let userEmail = "dev mode — supabase not configured";
+  if (isSupabaseConfigured()) {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) redirect("/login?redirect=/app");
+    userEmail = user.email ?? "";
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-neutral-50">
@@ -35,7 +42,7 @@ export default async function DevLayout({
               </Link>
             </nav>
           </div>
-          <span className="text-xs text-neutral-500">{user.email}</span>
+          <span className="text-xs text-neutral-500">{userEmail}</span>
         </div>
       </header>
       <main className="flex-1">{children}</main>

@@ -80,6 +80,65 @@ All visual work must follow `.claude/skills/frontend-design/`. Core rules:
 - DM Sans display, Inter body
 - GSAP scroll reveals with `.gsap-reveal` / `.gsap-feature` elements
 
+## Running on the Hetzner VM
+
+The dev server is configured to bind to `0.0.0.0:3333` so it is reachable from
+outside the VM.
+
+```bash
+pnpm dev -H 0.0.0.0 -p 3333
+# or
+pnpm dev  # defaults back to localhost:3000
+```
+
+**Before you can hit it from your laptop**, open port `3333/tcp` in the Hetzner
+firewall.
+
+### Option A — Hetzner Cloud Firewall (web console)
+
+1. Hetzner Cloud → your project → *Firewalls* → the firewall attached to this
+   VM.
+2. Add an *inbound* rule:
+   - Protocol: `TCP`
+   - Port: `3333`
+   - Source: your laptop IP (use a CIDR like `203.0.113.4/32`) or `0.0.0.0/0,
+     ::/0` for anywhere (less safe — only while testing).
+3. Save.
+
+### Option B — Hetzner Cloud Firewall (hcloud CLI)
+
+```bash
+hcloud firewall add-rule <FIREWALL_NAME> \
+  --direction in \
+  --protocol tcp \
+  --port 3333 \
+  --source-ips 0.0.0.0/0 --source-ips ::/0
+```
+
+### Option C — on-host ufw (if no Hetzner firewall attached)
+
+```bash
+sudo ufw allow 3333/tcp
+sudo ufw reload
+```
+
+Once the port is open, the app is reachable at `http://<VM_PUBLIC_IP>:3333`.
+
+**Current VM public IP:** `89.167.43.92` → <http://89.167.43.92:3333>
+
+### Background / foreground
+
+The server is started in a background process by Claude during scaffolding.
+To check or stop it:
+
+```bash
+# find the process
+ss -tlnp | grep :3333
+
+# stop
+pkill -f "next dev -H 0.0.0.0 -p 3333"
+```
+
 ## Scripts
 
 | Command | What it does |

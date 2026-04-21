@@ -37,6 +37,11 @@ yarn-error.log*
 # vercel
 .vercel
 
+# Claude
+.claude/scheduled_tasks.lock
+.claude/memory/
+memory/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
