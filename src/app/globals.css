@@ -1,0 +1,157 @@
+@import "tailwindcss";
+
+/*
+ * Crewqa design tokens — derived from the frontend-design skill.
+ * GOV.UK-inspired: navy + teal + amber focus, sharp corners.
+ */
+
+@theme {
+  /* ---------- Color: Primary (Navy / Slate) ---------- */
+  --color-primary-50: #f8fafc;
+  --color-primary-100: #e8eef4;
+  --color-primary-200: #cbd5e1;
+  --color-primary-300: #94a3b8;
+  --color-primary-400: #64748b;
+  --color-primary-500: #1e3a5f;
+  --color-primary-600: #172d4a;
+  --color-primary-700: #0f2a45;
+  --color-primary-800: #0a1f35;
+  --color-primary-900: #061525;
+
+  /* ---------- Color: Accent (Teal) ---------- */
+  --color-accent-300: #5eead4;
+  --color-accent-400: #14b8a6;
+  --color-accent-500: #0d9488;
+  --color-accent-600: #0f766e;
+
+  /* ---------- Color: Focus (Amber) ---------- */
+  --color-focus: #f59e0b;
+
+  /* ---------- Color: Highlight (Yellow) ---------- */
+  --color-highlight-300: #fef08a;
+  --color-highlight-400: #facc15;
+  --color-highlight-500: #eab308;
+
+  /* ---------- Color: Neutral (Gray) ---------- */
+  --color-neutral-50: #fafaf9;
+  --color-neutral-100: #f5f5f4;
+  --color-neutral-200: #e5e7eb;
+  --color-neutral-300: #d1d5db;
+  --color-neutral-400: #9ca3af;
+  --color-neutral-500: #6b7280;
+  --color-neutral-600: #4a5568;
+  --color-neutral-700: #374151;
+  --color-neutral-800: #1f2937;
+  --color-neutral-900: #1a1a1a;
+
+  /* ---------- Typography ---------- */
+  --font-display: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  /* ---------- Radius (sharp by default) ---------- */
+  --radius-sm: 4px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #1a1a1a;
+}
+
+html,
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body);
+}
+
+body {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---------- Component classes ---------- */
+
+@layer components {
+  .container-page {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Buttons */
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-5 py-3
+           bg-accent-400 text-white font-bold rounded
+           transition-colors
+           hover:bg-accent-500
+           focus:outline-none focus:ring-4 focus:ring-focus;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-5 py-3
+           bg-primary-500 text-white font-bold rounded
+           transition-colors
+           hover:bg-primary-600
+           focus:outline-none focus:ring-4 focus:ring-focus;
+  }
+
+  .btn-tertiary {
+    @apply inline-flex items-center justify-center px-5 py-3
+           bg-white text-primary-500 font-bold rounded
+           border-2 border-primary-500
+           transition-colors
+           hover:bg-primary-50
+           focus:outline-none focus:ring-4 focus:ring-focus;
+  }
+
+  .btn-premium {
+    @apply relative inline-flex items-center justify-center px-8 py-4
+           bg-accent-400 text-white font-semibold
+           overflow-hidden transition-all duration-300
+           focus:outline-none focus:ring-4 focus:ring-focus;
+  }
+  .btn-premium::after {
+    content: "";
+    @apply absolute bottom-0 left-0 h-1 bg-white/30;
+    width: 0;
+    transition: width 0.3s ease;
+  }
+  .btn-premium:hover {
+    @apply bg-accent-500;
+    box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3);
+  }
+  .btn-premium:hover::after {
+    width: 100%;
+  }
+
+  /* Feature card — dashed border, hover lift */
+  .feature-card {
+    @apply relative bg-white p-7 border border-dashed border-neutral-300
+           transition-all duration-300;
+  }
+  .feature-card:hover {
+    @apply border-accent-400;
+    box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+  }
+
+  /* Section heading */
+  .section-heading {
+    @apply text-3xl lg:text-4xl font-bold font-display text-neutral-900;
+  }
+
+  /* Eyebrow label */
+  .eyebrow {
+    @apply inline-block text-xs font-semibold uppercase tracking-[0.2em]
+           text-accent-500 mb-3;
+  }
+}
+
+/* GSAP reveal default — elements start invisible, animate in on scroll */
+.gsap-feature,
+.gsap-reveal {
+  opacity: 0;
+}

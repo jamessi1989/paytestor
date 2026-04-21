@@ -1,0 +1,262 @@
+// Crewqa data model.
+// Source of truth for all domain entities. Amounts stored in cents to avoid float drift.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------- Users and roles ----------
+
+enum Role {
+  DEV
+  TESTER
+  ADMIN
+}
+
+model User {
+  id         String   @id @default(cuid())
+  supabaseId String   @unique
+  email      String   @unique
+  role       Role
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  developer Developer?
+  tester    Tester?
+
+  qaReviews     Submission[]  @relation("QaReviewer")
+  ledgerEntries LedgerEntry[]
+}
+
+model Developer {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName      String?
+  stripeCustomerId String?
+  createdAt        DateTime @default(now())
+
+  campaigns Campaign[]
+}
+
+model Tester {
+  id                    String    @id @default(cuid())
+  userId                String    @unique
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  region                String
+  language              String
+  deviceFingerprint     String?
+  kycStatus             KycStatus @default(NOT_STARTED)
+  stripeIdentitySession String?
+  tremendousRecipientId String?
+  createdAt             DateTime  @default(now())
+
+  assignments     Assignment[]
+  campaignTesters CampaignTester[]
+  payouts         Payout[]
+}
+
+enum KycStatus {
+  NOT_STARTED
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+// ---------- Campaign ----------
+
+enum CampaignStatus {
+  DRAFT
+  AWAITING_PAYMENT
+  FUNDED
+  RECRUITING
+  RUNNING
+  COMPLETE
+  CANCELLED
+}
+
+model Campaign {
+  id                    String         @id @default(cuid())
+  developerId           String
+  developer             Developer      @relation(fields: [developerId], references: [id])
+  appPackage            String
+  appName               String
+  playStoreUrl          String?
+  targetRegion          String
+  targetLanguage        String
+  startDate             DateTime?
+  endDate               DateTime?
+  status                CampaignStatus @default(DRAFT)
+  totalFundedCents      Int            @default(0)
+  escrowBalanceCents    Int            @default(0)
+  stripePaymentIntentId String?
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  tasks           Task[]
+  campaignTesters CampaignTester[]
+  report          CampaignReport?
+}
+
+// Tester slots on a campaign (1 campaign = 12 slots)
+model CampaignTester {
+  id           String     @id @default(cuid())
+  campaignId   String
+  campaign     Campaign   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  testerId     String
+  tester       Tester     @relation(fields: [testerId], references: [id])
+  gmailAddress String
+  status       SlotStatus @default(ASSIGNED)
+  assignedAt   DateTime   @default(now())
+  droppedAt    DateTime?
+
+  @@unique([campaignId, testerId])
+}
+
+enum SlotStatus {
+  ASSIGNED
+  ACTIVE
+  DROPPED
+  COMPLETED
+}
+
+// ---------- Tasks and submissions ----------
+
+enum TaskType {
+  INSTALL
+  TEXT_REVIEW
+  SCREEN_RECORDING
+  BUG_REPORT
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  campaignId  String
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  dayIndex    Int
+  type        TaskType
+  description String
+  rewardCents Int
+
+  assignments Assignment[]
+}
+
+enum AssignmentStatus {
+  SCHEDULED
+  DUE
+  SUBMITTED
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+model Assignment {
+  id        String           @id @default(cuid())
+  taskId    String
+  task      Task             @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  testerId  String
+  tester    Tester           @relation(fields: [testerId], references: [id])
+  dueAt     DateTime
+  status    AssignmentStatus @default(SCHEDULED)
+  createdAt DateTime         @default(now())
+
+  submission Submission?
+
+  @@unique([taskId, testerId])
+}
+
+enum QaStatus {
+  PENDING
+  LLM_APPROVED
+  LLM_FLAGGED
+  HUMAN_APPROVED
+  REJECTED
+}
+
+model Submission {
+  id           String     @id @default(cuid())
+  assignmentId String     @unique
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  contentType  TaskType
+  contentText  String?
+  contentUrl   String?
+  qaStatus     QaStatus   @default(PENDING)
+  qaReviewerId String?
+  qaReviewer   User?      @relation("QaReviewer", fields: [qaReviewerId], references: [id])
+  qaNotes      String?
+  llmScore     Float?
+  llmRationale String?
+  reviewedAt   DateTime?
+  createdAt    DateTime   @default(now())
+
+  devResponse DevResponse?
+}
+
+model DevResponse {
+  id           String     @id @default(cuid())
+  submissionId String     @unique
+  submission   Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  body         String
+  respondedAt  DateTime   @default(now())
+}
+
+// ---------- Money ----------
+
+enum PayoutChannel {
+  GIFT_CARD
+  PREPAID_VISA
+  PAYPAL
+  VENMO
+  ACH
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  SENT
+  FAILED
+}
+
+model Payout {
+  id                String        @id @default(cuid())
+  testerId          String
+  tester            Tester        @relation(fields: [testerId], references: [id])
+  amountCents       Int
+  channel           PayoutChannel
+  status            PayoutStatus  @default(PENDING)
+  tremendousOrderId String?
+  createdAt         DateTime      @default(now())
+  completedAt       DateTime?
+}
+
+enum LedgerDirection {
+  CREDIT
+  DEBIT
+}
+
+model LedgerEntry {
+  id          String          @id @default(cuid())
+  userId      String
+  user        User            @relation(fields: [userId], references: [id])
+  amountCents Int
+  direction   LedgerDirection
+  ref         String
+  memo        String?
+  createdAt   DateTime        @default(now())
+
+  @@index([userId, createdAt])
+}
+
+// ---------- Report ----------
+
+model CampaignReport {
+  id          String   @id @default(cuid())
+  campaignId  String   @unique
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  pdfUrl      String
+  generatedAt DateTime @default(now())
+}
