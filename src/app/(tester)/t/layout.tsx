@@ -1,23 +1,10 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import {
-  createSupabaseServerClient,
-  isSupabaseConfigured,
-} from "@/lib/supabase/server";
 
-export default async function TesterLayout({
+export default function TesterLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  if (isSupabaseConfigured()) {
-    const supabase = await createSupabaseServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) redirect("/login?redirect=/t");
-  }
-
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <header className="border-b border-neutral-200 bg-white">

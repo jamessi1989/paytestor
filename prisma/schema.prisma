@@ -18,18 +18,63 @@ enum Role {
 }
 
 model User {
-  id         String   @id @default(cuid())
-  supabaseId String   @unique
-  email      String   @unique
-  role       Role
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  role          Role      @default(DEV)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts Account[]
+  sessions Session[]
 
   developer Developer?
   tester    Tester?
 
   qaReviews     Submission[]  @relation("QaReviewer")
   ledgerEntries LedgerEntry[]
+}
+
+// Auth.js v5 OAuth account linkage. Field names are snake_case to satisfy the
+// PrismaAdapter contract — do not rename.
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+// Reserved by Auth.js for database session strategy. We use JWT today; keeping
+// the model avoids a migration if we flip strategies later.
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
 }
 
 model Developer {

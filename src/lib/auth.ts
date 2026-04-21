@@ -1,8 +1,30 @@
+import NextAuth from "next-auth";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import type { Role } from "@prisma/client";
+import authConfig from "@/auth.config";
 import { db } from "@/lib/db";
-import {
-  createSupabaseServerClient,
-  isSupabaseConfigured,
-} from "@/lib/supabase/server";
+
+export const { handlers, auth, signIn, signOut } = NextAuth({
+  adapter: PrismaAdapter(db),
+  session: { strategy: "jwt" },
+  ...authConfig,
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.role = (user as { role?: Role }).role ?? "DEV";
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (token && session.user) {
+        session.user.id = token.id as string;
+        session.user.role = token.role as Role;
+      }
+      return session;
+    },
+  },
+});
 
 export class AuthError extends Error {
   constructor(message: string) {
@@ -11,38 +33,19 @@ export class AuthError extends Error {
   }
 }
 
-/**
- * Resolves the current Supabase session to a Developer row, upserting the
- * User + Developer records on first sight.
- * Throws AuthError if no session or Supabase is unconfigured.
- */
+// Resolves the current session to a Developer row, upserting on first sight.
+// Throws AuthError if not signed in.
 export async function requireDeveloper() {
-  if (!isSupabaseConfigured()) {
-    throw new AuthError(
-      "Supabase is not configured. Fill NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY."
-    );
-  }
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user: supabaseUser },
-  } = await supabase.auth.getUser();
-  if (!supabaseUser) throw new AuthError("Not signed in");
-
-  const user = await db.user.upsert({
-    where: { supabaseId: supabaseUser.id },
-    update: { email: supabaseUser.email ?? "" },
-    create: {
-      supabaseId: supabaseUser.id,
-      email: supabaseUser.email ?? "",
-      role: "DEV",
-    },
-  });
+  const session = await auth();
+  if (!session?.user?.id) throw new AuthError("Not signed in");
 
   const developer = await db.developer.upsert({
-    where: { userId: user.id },
+    where: { userId: session.user.id },
     update: {},
-    create: { userId: user.id },
+    create: { userId: session.user.id },
   });
-
+  const user = await db.user.findUniqueOrThrow({
+    where: { id: session.user.id },
+  });
   return { user, developer };
 }

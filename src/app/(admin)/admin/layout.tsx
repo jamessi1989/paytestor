@@ -1,24 +1,12 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import {
-  createSupabaseServerClient,
-  isSupabaseConfigured,
-} from "@/lib/supabase/server";
 
-export default async function AdminLayout({
+export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  if (isSupabaseConfigured()) {
-    const supabase = await createSupabaseServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) redirect("/login?redirect=/admin");
-    // Role enforcement happens in each server action; keep layout thin.
-  }
-
+  // Proxy enforces authentication. Role enforcement happens in each admin
+  // server action, not the layout.
   return (
     <div className="flex min-h-screen flex-col bg-neutral-900 text-neutral-100">
       <header className="border-b border-neutral-800 bg-primary-700">

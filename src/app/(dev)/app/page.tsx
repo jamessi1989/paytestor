@@ -1,19 +1,12 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import {
-  isSupabaseConfigured,
-} from "@/lib/supabase/server";
 import { requireDeveloper } from "@/lib/auth";
 import { listDeveloperCampaigns } from "@/server/services/campaigns";
 import { formatCurrency } from "@/lib/utils";
 
 export default async function DevDashboard() {
-  const configured = isSupabaseConfigured();
-  let campaigns: Awaited<ReturnType<typeof listDeveloperCampaigns>> = [];
-  if (configured) {
-    const { developer } = await requireDeveloper();
-    campaigns = await listDeveloperCampaigns(developer.id);
-  }
+  const { developer } = await requireDeveloper();
+  const campaigns = await listDeveloperCampaigns(developer.id);
 
   return (
     <div className="container-page py-10">
@@ -32,9 +25,7 @@ export default async function DevDashboard() {
         </Link>
       </div>
 
-      {!configured ? (
-        <InfraBanner />
-      ) : campaigns.length === 0 ? (
+      {campaigns.length === 0 ? (
         <EmptyState />
       ) : (
         <ul className="mt-10 divide-y divide-neutral-200 border border-neutral-200 bg-white">
@@ -84,22 +75,6 @@ function EmptyState() {
       >
         Create campaign
       </Link>
-    </div>
-  );
-}
-
-function InfraBanner() {
-  return (
-    <div className="mt-10 border border-highlight-400 bg-highlight-300/30 p-6">
-      <h2 className="font-display text-base font-bold text-primary-700">
-        Infrastructure pending setup
-      </h2>
-      <p className="mt-2 text-sm leading-relaxed text-neutral-700">
-        Supabase and Postgres aren&apos;t configured yet, so the campaigns list
-        has nothing to show. Fill{" "}
-        <code className="bg-white px-1 py-0.5 text-xs">.env</code> with real
-        values and restart the dev server to activate the real flow.
-      </p>
     </div>
   );
 }

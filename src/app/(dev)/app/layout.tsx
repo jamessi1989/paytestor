@@ -1,23 +1,19 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import {
-  createSupabaseServerClient,
-  isSupabaseConfigured,
-} from "@/lib/supabase/server";
+import { auth, signOut } from "@/lib/auth";
 
 export default async function DevLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  let userEmail = "dev mode — supabase not configured";
-  if (isSupabaseConfigured()) {
-    const supabase = await createSupabaseServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) redirect("/login?redirect=/app");
-    userEmail = user.email ?? "";
+  // Proxy already enforces authentication for /app. Session read here is just
+  // to surface the user's email in the chrome.
+  const session = await auth();
+  const userEmail = session?.user?.email ?? "";
+
+  async function signOutAction() {
+    "use server";
+    await signOut({ redirectTo: "/" });
   }
 
   return (
@@ -42,7 +38,17 @@ export default async function DevLayout({
               </Link>
             </nav>
           </div>
-          <span className="text-xs text-neutral-500">{userEmail}</span>
+          <div className="flex items-center gap-4 text-xs text-neutral-500">
+            <span>{userEmail}</span>
+            <form action={signOutAction}>
+              <button
+                type="submit"
+                className="text-neutral-500 hover:text-primary-500"
+              >
+                Sign out
+              </button>
+            </form>
+          </div>
         </div>
       </header>
       <main className="flex-1">{children}</main>

@@ -1,0 +1,22 @@
+# Local development Postgres for Crewqa.
+# Host port 5435 (5432–5434 are used by other projects on this VM).
+# Bound to 127.0.0.1 only — never expose directly to the internet.
+# Prod uses a separate compose file that puts Postgres on the project's Docker
+# network behind Caddy; see DEPLOY-ON-BOTVIEW-SERVER.md.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: crewqa-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: crewqa
+      POSTGRES_PASSWORD: crewqa
+      POSTGRES_DB: crewqa
+    ports:
+      - "127.0.0.1:5435:5432"
+    volumes:
+      - crewqa_pg_data:/var/lib/postgresql/data
+
+volumes:
+  crewqa_pg_data:
