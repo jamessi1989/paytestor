@@ -45,3 +45,6 @@ memory/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Ad-hoc screenshots saved into the repo root
+Screenshot from *.png
