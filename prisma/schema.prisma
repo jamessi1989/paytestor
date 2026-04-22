@@ -133,6 +133,7 @@ model Campaign {
   playStoreUrl          String?
   targetRegion          String
   targetLanguage        String
+  timezone              String         @default("UTC")
   startDate             DateTime?
   endDate               DateTime?
   status                CampaignStatus @default(DRAFT)
