@@ -111,6 +111,57 @@ export async function markCampaignFunded(campaignId: string) {
   });
 }
 
+const CAMPAIGN_TESTER_COUNT = 12;
+
+// Picks up to 12 KYC-verified testers and attaches them as CampaignTester slots.
+// Prefers region+language matches but falls back to any verified tester so the
+// dev loop can't stall because a seed combo wasn't populated. Returns the count
+// actually assigned (may be < 12 if DB is underpopulated).
+export async function assignTestersToCampaign(campaignId: string) {
+  const campaign = await db.campaign.findUniqueOrThrow({
+    where: { id: campaignId },
+  });
+
+  const matched = await db.tester.findMany({
+    where: {
+      kycStatus: "VERIFIED",
+      region: campaign.targetRegion,
+      language: campaign.targetLanguage,
+      campaignTesters: { none: { campaignId } },
+    },
+    take: CAMPAIGN_TESTER_COUNT,
+    orderBy: { createdAt: "asc" },
+  });
+
+  let chosen = matched;
+  if (chosen.length < CAMPAIGN_TESTER_COUNT) {
+    const fallback = await db.tester.findMany({
+      where: {
+        kycStatus: "VERIFIED",
+        id: { notIn: chosen.map((t) => t.id) },
+        campaignTesters: { none: { campaignId } },
+      },
+      take: CAMPAIGN_TESTER_COUNT - chosen.length,
+      orderBy: { createdAt: "asc" },
+    });
+    chosen = [...chosen, ...fallback];
+  }
+
+  if (chosen.length === 0) return { assigned: 0 };
+
+  await db.campaignTester.createMany({
+    data: chosen.map((t, i) => ({
+      campaignId,
+      testerId: t.id,
+      gmailAddress: `tester${i + 1}.${campaignId.slice(-6)}@crewqa.test`,
+      status: "ASSIGNED",
+    })),
+    skipDuplicates: true,
+  });
+
+  return { assigned: chosen.length };
+}
+
 // ---------- Reads ----------
 
 export async function listDeveloperCampaigns(developerId: string) {
@@ -130,8 +181,21 @@ export async function getCampaignForDeveloper(
   return db.campaign.findFirst({
     where: { id: campaignId, developerId },
     include: {
-      tasks: { orderBy: { dayIndex: "asc" } },
-      campaignTesters: { include: { tester: true } },
+      tasks: {
+        orderBy: { dayIndex: "asc" },
+        include: {
+          assignments: {
+            include: {
+              submission: true,
+              tester: { include: { user: true } },
+            },
+          },
+        },
+      },
+      campaignTesters: {
+        include: { tester: { include: { user: true } } },
+        orderBy: { assignedAt: "asc" },
+      },
     },
   });
 }

@@ -3,11 +3,15 @@
 import { redirect } from "next/navigation";
 import { requireDeveloper } from "@/lib/auth";
 import { stripe } from "@/lib/stripe";
+import { devBypassStripe } from "@/lib/dev-flags";
 import {
   createCampaignInput,
   createDraftCampaign,
   attachPaymentIntent,
+  markCampaignFunded,
+  assignTestersToCampaign,
 } from "@/server/services/campaigns";
+import { materializeAssignments } from "@/server/services/lifecycle";
 import { STANDARD_CAMPAIGN_PRICE_CENTS } from "@/lib/pricing";
 
 export async function createCampaignAndCheckout(
@@ -30,6 +34,18 @@ export async function createCampaignAndCheckout(
 
   const { developer } = await requireDeveloper();
   const campaign = await createDraftCampaign(developer.id, parsed.data);
+
+  // Dev loop: skip Stripe, flip the campaign to FUNDED, assign testers,
+  // materialize per-tester assignments. The Inngest lifecycle event is
+  // intentionally NOT fired — the dev-tools panel on the detail page walks
+  // the timeline manually, and firing it would double-advance state if the
+  // Inngest dev server is also running.
+  if (devBypassStripe()) {
+    await markCampaignFunded(campaign.id);
+    await assignTestersToCampaign(campaign.id);
+    await materializeAssignments(campaign.id);
+    redirect(`/app/campaigns/${campaign.id}?paid=1&bypass=1`);
+  }
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const session = await stripe.checkout.sessions.create({
