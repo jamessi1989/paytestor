@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Check, ShieldCheck, FileText, Users } from "lucide-react";
+import { JourneyAnimation } from "@/components/marketing/journey-animation";
 
 export default function LandingPage() {
   return (
@@ -69,44 +70,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* -------- How it works -------- */}
-      <section className="bg-neutral-50 py-20">
-        <div className="container-page">
-          <div className="mx-auto max-w-2xl text-center">
-            <span className="eyebrow">How it works</span>
-            <h2 className="section-heading">
-              Four structured deliverables, fourteen days.
-            </h2>
-            <p className="mt-4 text-lg leading-relaxed text-neutral-600">
-              Staggered tasks produce the organic telemetry Google wants — without
-              paying anyone for a fake daily login.
-            </p>
-          </div>
-
-          <div className="mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-4 lg:gap-8">
-            <TimelineCard
-              day="Day 1"
-              title="Install & onboard"
-              body="Testers install your app from the closed-testing track and complete your onboarding flow."
-            />
-            <TimelineCard
-              day="Day 4"
-              title="Written review"
-              body="A three-sentence review of your onboarding UI. LLM-graded, rejected if thin."
-            />
-            <TimelineCard
-              day="Day 9"
-              title="Screen recording"
-              body="A recorded walk-through of your core feature so you can see how real users hold it."
-            />
-            <TimelineCard
-              day="Day 13"
-              title="Bug report"
-              body="A structured bug, performance note, or feature request — with your responses appended to the report."
-            />
-          </div>
-        </div>
-      </section>
+      {/* -------- How it works — animated journey -------- */}
+      <JourneyAnimation />
 
       {/* -------- What you get -------- */}
       <section className="bg-white py-20">
@@ -157,26 +122,6 @@ export default function LandingPage() {
         </div>
       </section>
     </>
-  );
-}
-
-function TimelineCard({
-  day,
-  title,
-  body,
-}: {
-  day: string;
-  title: string;
-  body: string;
-}) {
-  return (
-    <div className="feature-card">
-      <div className="font-display text-sm font-bold uppercase tracking-wider text-accent-500">
-        {day}
-      </div>
-      <h3 className="mt-3 text-xl font-bold text-neutral-900">{title}</h3>
-      <p className="mt-3 leading-relaxed text-neutral-600">{body}</p>
-    </div>
   );
 }
 

@@ -155,3 +155,32 @@ body {
 .gsap-reveal {
   opacity: 0;
 }
+
+/* Journey animation — elements hidden until GSAP shows them. */
+.j-stuck,
+.j-shipped,
+.j-tile,
+.j-milestone,
+.j-live {
+  opacity: 0;
+}
+.j-rail,
+.j-rail-fill {
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+/* Reduced-motion or no-JS fallback: show the final state, skip motion. */
+@media (prefers-reduced-motion: reduce) {
+  .j-stuck,
+  .j-shipped,
+  .j-tile,
+  .j-milestone,
+  .j-live {
+    opacity: 1;
+  }
+  .j-rail,
+  .j-rail-fill {
+    transform: scaleX(1);
+  }
+}
